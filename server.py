@@ -1,0 +1,121 @@
+﻿import os
+import json
+import time
+import hashlib
+import uuid
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
+from pydantic import BaseModel
+from screenshot import take_screenshot
+from analyzer import analyze_landing_page
+
+app = FastAPI(title="Landing Page Critic")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+HISTORY_DIR = "history"
+CACHE_DIR = "cache"
+os.makedirs(HISTORY_DIR, exist_ok=True)
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+rate_limits = {}
+FREE_LIMIT = 3
+RATE_WINDOW = 3600
+
+class AnalyzeRequest(BaseModel):
+    url: str
+    api_key: str
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    with open("static/index.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.post("/api/analyze")
+async def analyze(request: AnalyzeRequest, req: Request):
+    api_key = request.api_key
+    if not api_key:
+        raise HTTPException(status_code=400, detail="API key required")
+
+    client_ip = req.client.host
+    now = time.time()
+    if client_ip in rate_limits:
+        timestamps = [t for t in rate_limits[client_ip] if now - t < RATE_WINDOW]
+        if len(timestamps) >= FREE_LIMIT:
+            raise HTTPException(status_code=429, detail=f"Free limit: {FREE_LIMIT} analyses per hour. Get Pro for unlimited.")
+        rate_limits[client_ip] = timestamps
+    else:
+        rate_limits[client_ip] = []
+    rate_limits[client_ip].append(now)
+
+    url = request.url
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    cache_file = f"{CACHE_DIR}/{url_hash}.json"
+
+    if os.path.exists(cache_file):
+        with open(cache_file, "r", encoding="utf-8") as f:
+            cached = json.load(f)
+        age_minutes = (now - cached.get("timestamp_unix", 0)) / 60
+        if age_minutes < 1440:
+            return cached
+
+    screenshot_path = f"history/screenshot_{uuid.uuid4().hex[:8]}.png"
+    try:
+        await take_screenshot(url, screenshot_path)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to capture: {str(e)}")
+
+    try:
+        result = analyze_landing_page(screenshot_path, "", url, api_key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+    analysis_id = uuid.uuid4().hex[:8]
+    record = {
+        "id": analysis_id,
+        "url": url,
+        "timestamp": datetime.now().isoformat(),
+        "timestamp_unix": now,
+        "result": result,
+        "screenshot": screenshot_path
+    }
+
+    with open(f"{HISTORY_DIR}/{analysis_id}.json", "w", encoding="utf-8") as f:
+        json.dump(record, f, ensure_ascii=False, indent=2)
+
+    with open(cache_file, "w", encoding="utf-8") as f:
+        json.dump(record, f, ensure_ascii=False, indent=2)
+
+    return record
+
+@app.get("/api/history")
+async def get_history():
+    records = []
+    for filename in sorted(os.listdir(HISTORY_DIR), reverse=True):
+        if filename.endswith(".json"):
+            with open(f"{HISTORY_DIR}/{filename}", "r", encoding="utf-8") as f:
+                records.append(json.load(f))
+    return records[:50]
+
+@app.get("/api/history/{analysis_id}")
+async def get_analysis(analysis_id: str):
+    filepath = f"{HISTORY_DIR}/{analysis_id}.json"
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Not found")
+    with open(filepath, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+@app.get("/api/screenshot/{filename}")
+async def get_screenshot(filename: str):
+    filepath = f"{HISTORY_DIR}/{filename}"
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(filepath, media_type="image/png")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
