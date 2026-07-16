@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page Critic — Why They Don't Buy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#09090b;--bg2:#18181b;--text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--accent:#a855f7;--accent2:#6366f1;--green:#22c55e;--border:rgba(255,255,255,0.06)}
+        html{scroll-behavior:smooth}
+        body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+        .glow{position:fixed;border-radius:50%;filter:blur(150px);pointer-events:none;opacity:.12}
+        .g1{width:700px;height:700px;background:var(--accent);top:-300px;left:-200px}
+        .g2{width:500px;height:500px;background:var(--accent2);bottom:-200px;right:-150px}
+        .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+        nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+        .logo-text{font-size:20px;font-weight:700}
+        .nav-links{display:flex;gap:32px;align-items:center}
+        .nav-links a{color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
+        .nav-links a:hover{color:var(--text)}
+        .nav-cta{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff!important;padding:10px 20px;border-radius:10px;font-weight:600!important}
+        .hero{padding:100px 0 80px;text-align:center}
+        .hero-badge{display:inline-block;padding:8px 16px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);border-radius:20px;font-size:13px;font-weight:600;color:var(--accent);margin-bottom:24px}
+        .hero h1{font-size:clamp(40px,6vw,64px);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:20px}
+        .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero p{font-size:18px;color:var(--text2);max-width:560px;margin:0 auto 40px;line-height:1.7}
+        .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+        .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:16px 32px;border-radius:12px;font-size:16px;font-weight:700;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(168,85,247,0.3)}
+        .btn-secondary{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:16px 32px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;transition:all .2s}
+        .btn-secondary:hover{background:rgba(255,255,255,0.1)}
+        .hero-visual{margin-top:60px;position:relative}
+        .mockup{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.4)}
+        .mockup-bar{display:flex;gap:6px;padding:14px 18px;border-bottom:1px solid var(--border)}
+        .mockup-bar span{width:12px;height:12px;border-radius:50%}
+        .mockup-bar span:nth-child(1){background:#ef4444}
+        .mockup-bar span:nth-child(2){background:#eab308}
+        .mockup-bar span:nth-child(3){background:#22c55e}
+        .mockup-body{padding:32px;display:grid;grid-template-columns:200px 1fr;gap:24px;min-height:320px}
+        .mock-score{text-align:center;padding:20px}
+        .mock-score-num{font-size:64px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .mock-score-label{font-size:13px;color:var(--text3);margin-top:4px}
+        .mock-items{display:flex;flex-direction:column;gap:8px}
+        .mock-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid var(--border)}
+        .mock-item-name{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+        .mock-dot{width:8px;height:8px;border-radius:50%}
+        .mock-bar{width:80px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+        .mock-bar-fill{height:100%;border-radius:3px}
+        .features{padding:100px 0}
+        .section-label{text-align:center;font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+        .section-title{text-align:center;font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-1px;margin-bottom:60px}
+        .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+        .feat-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all .3s}
+        .feat-card:hover{border-color:rgba(168,85,247,0.3);transform:translateY(-4px)}
+        .feat-icon{width:48px;height:48px;background:rgba(168,85,247,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:16px}
+        .feat-card h3{font-size:18px;font-weight:700;margin-bottom:8px}
+        .feat-card p{font-size:14px;color:var(--text2);line-height:1.7}
+        .how{padding:100px 0}
+        .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;position:relative}
+        .step{text-align:center;position:relative}
+        .step-num{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;margin:0 auto 20px}
+        .step h3{font-size:18px;font-weight:700;margin-bottom:8px}
+        .step p{font-size:14px;color:var(--text2);line-height:1.6}
+        .pricing{padding:100px 0}
+        .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:700px;margin:0 auto}
+        .price-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:20px;padding:36px 32px;position:relative}
+        .price-pro{background:linear-gradient(135deg,rgba(168,85,247,0.06),rgba(99,102,241,0.06));border-color:rgba(168,85,247,0.2)}
+        .price-badge{position:absolute;top:-12px;right:20px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:1px}
+        .price-name{font-size:14px;font-weight:600;color:var(--text3);margin-bottom:8px}
+        .price-amount{font-size:48px;font-weight:900;letter-spacing:-2px}
+        .price-amount span{font-size:16px;font-weight:500;color:var(--text3)}
+        .price-desc{font-size:14px;color:var(--text3);margin:8px 0 24px}
+        .price-list{list-style:none;margin-bottom:28px}
+        .price-list li{padding:8px 0;font-size:14px;color:var(--text2);display:flex;align-items:center;gap:10px}
+        .price-list li::before{content:"";width:8px;height:8px;background:var(--green);border-radius:50%;flex-shrink:0}
+        .price-btn{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;transition:all .2s;cursor:pointer;border:none;font-family:inherit}
+        .price-btn-free{background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
+        .price-btn-pro{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+        .price-btn:hover{transform:translateY(-2px)}
+        .cta{padding:100px 0;text-align:center}
+        .cta-box{background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(99,102,241,0.1));border:1px solid rgba(168,85,247,0.2);border-radius:24px;padding:60px 40px}
+        .cta-box h2{font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-1px;margin-bottom:16px}
+        .cta-box p{font-size:16px;color:var(--text2);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto}
+        footer{padding:40px 0;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:13px}
+        @media(max-width:768px){
+            .features-grid,.steps{grid-template-columns:1fr}
+            .price-grid{grid-template-columns:1fr}
+            .mockup-body{grid-template-columns:1fr}
+            .mock-score{padding:0 0 16px}
+            .nav-links a:not(.nav-cta){display:none}
+        }
+    </style>
+</head>
+<body>
+    <div class="glow g1"></div>
+    <div class="glow g2"></div>
+
+    <div class="wrap">
+        <nav>
+            <div class="logo">
+                <div class="logo-mark">LP</div>
+                <div class="logo-text">Critic</div>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how">How it works</a>
+                <a href="#pricing">Pricing</a>
+                <a href="https://your-app-url.railway.app" class="nav-cta">Open App</a>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-badge">AI-powered analysis</div>
+            <h1>Why <span>don't they buy?</span></h1>
+            <p>Paste any landing page URL. Get a detailed breakdown of every mistake that's killing your conversions — powered by AI vision.</p>
+            <div class="hero-btns">
+                <a href="https://your-app-url.railway.app" class="btn-primary">Analyze Your Landing Page</a>
+                <a href="#how" class="btn-secondary">See how it works</a>
+            </div>
+
+            <div class="hero-visual">
+                <div class="mockup">
+                    <div class="mockup-bar"><span></span><span></span><span></span></div>
+                    <div class="mockup-body">
+                        <div class="mock-score">
+                            <div class="mock-score-num">72</div>
+                            <div class="mock-score-label">Overall Score</div>
+                        </div>
+                        <div class="mock-items">
+                            <div class="mock-item">
+                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span>Hero Section</div>
+                                <div class="mock-bar"><div class="mock-bar-fill" style="width:80%;background:var(--green)"></div></div>
+                                <span style="font-weight:700;font-size:13px">8/10</span>
+                            </div>
+                            <div class="mock-item">
+                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span>CTA Buttons</div>
+                                <div class="mock-bar"><div class="mock-bar-fill" style="width:70%;background:var(--green)"></div></div>
+                                <span style="font-weight:700;font-size:13px">7/10</span>
+                            </div>
+                            <div class="mock-item">
+                                <div class="mock-item-name"><span class="mock-dot" style="background:#eab308"></span>Trust Signals</div>
+                                <div class="mock-bar"><div class="mock-bar-fill" style="width:50%;background:#eab308"></div></div>
+                                <span style="font-weight:700;font-size:13px">5/10</span>
+                            </div>
+                            <div class="mock-item">
+                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span>Color Palette</div>
+                                <div class="mock-bar"><div class="mock-bar-fill" style="width:90%;background:var(--green)"></div></div>
+                                <span style="font-weight:700;font-size:13px">9/10</span>
+                            </div>
+                            <div class="mock-item">
+                                <div class="mock-item-name"><span class="mock-dot" style="background:#ef4444"></span>Copy Quality</div>
+                                <div class="mock-bar"><div class="mock-bar-fill" style="width:40%;background:#ef4444"></div></div>
+                                <span style="font-weight:700;font-size:13px">4/10</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Everything you need to fix your landing page</h2>
+            <div class="features-grid">
+                <div class="feat-card">
+                    <div class="feat-icon">&#128065;</div>
+                    <h3>AI Vision Analysis</h3>
+                    <p>Llama 4 Scout analyzes your page screenshot like a human conversion expert would.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">&#128200;</div>
+                    <h3>10 Conversion Factors</h3>
+                    <p>Hero, CTA, Trust, Colors, Typography, Copy, Layout, Mobile, Speed, Barriers — scored individually.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">&#9889;</div>
+                    <h3>Quick Wins</h3>
+                    <p>Top 3 easiest fixes with the highest impact on your conversion rate.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">&#128229;</div>
+                    <h3>Export Reports</h3>
+                    <p>Download beautiful HTML or PDF reports to share with your team or clients.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">&#128337;</div>
+                    <h3>Analysis History</h3>
+                    <p>All past analyses saved. Track improvements over time.</p>
+                </div>
+                <div class="feat-card">
+                    <div class="feat-icon">&#127760;</div>
+                    <h3>RU / EN</h3>
+                    <p>Bilingual interface. Analyze any landing page in any language.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="how" id="how">
+            <div class="section-label">How it works</div>
+            <h2 class="section-title">Three steps to better conversions</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <h3>Paste URL</h3>
+                    <p>Enter your landing page URL. Takes 2 seconds.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <h3>AI Analyzes</h3>
+                    <p>We take a screenshot and run it through AI vision analysis. Takes 30 seconds.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <h3>Get Report</h3>
+                    <p>Receive a detailed breakdown with scores, issues, and actionable fixes.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="pricing" id="pricing">
+            <div class="section-label">Pricing</div>
+            <h2 class="section-title">Simple, transparent pricing</h2>
+            <div class="price-grid">
+                <div class="price-card">
+                    <div class="price-name">Free</div>
+                    <div class="price-amount">$0</div>
+                    <div class="price-desc">Free forever</div>
+                    <ul class="price-list">
+                        <li>3 analyses per hour</li>
+                        <li>Your own Groq API key</li>
+                        <li>HTML report download</li>
+                        <li>Analysis history</li>
+                    </ul>
+                    <a href="https://your-app-url.railway.app" class="price-btn price-btn-free">Get Started</a>
+                </div>
+                <div class="price-card price-pro">
+                    <div class="price-badge">POPULAR</div>
+                    <div class="price-name">Pro</div>
+                    <div class="price-amount">$5 <span>/ month</span></div>
+                    <div class="price-desc">For professionals</div>
+                    <ul class="price-list">
+                        <li>Unlimited analyses</li>
+                        <li>No API key needed</li>
+                        <li>HTML + PDF reports</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <button class="price-btn price-btn-pro" onclick="alert('Google Pay integration coming soon!')">Subscribe with Google Pay</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta">
+            <div class="cta-box">
+                <h2>Find out why they don't buy</h2>
+                <p>Get a free AI analysis of your landing page in 30 seconds.</p>
+                <a href="https://your-app-url.railway.app" class="btn-primary">Analyze Now — It's Free</a>
+            </div>
+        </section>
+
+        <footer>
+            <p>Landing Page Critic &mdash; AI-powered conversion analysis. Built with Groq, Playwright, and FastAPI.</p>
+        </footer>
+    </div>
+</body>
+</html>
