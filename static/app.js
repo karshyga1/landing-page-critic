@@ -1,4 +1,4 @@
-﻿let currentLang="ru",currentAnalysis=null,googlePayClient=null;
+﻿let currentLang="ru",currentAnalysis=null;
 
 document.addEventListener("DOMContentLoaded",()=>{
     setupLang();
@@ -105,7 +105,7 @@ const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob)
 html2pdf().set({margin:10,filename:"report-"+d.id+".pdf",html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(document.getElementById("report-content")).save();
 }}
 
-// Google Pay
+
 function onGooglePayLoaded(){
     googlePayClient=new google.payments.api.PaymentsClient({environment:"TEST"});
     const button=googlePayClient.createButton({onClick:onGooglePayClick,buttonColor:"black",buttonType:"subscribe"});
@@ -120,3 +120,4 @@ function onGooglePayClick(){
         if(err.statusCode!=="CANCELED")console.error(err);
     });
 }
+

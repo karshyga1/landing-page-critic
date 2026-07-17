@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landing Page Critic � Why They Don't Buy</title>
+    <title>Landing Page Critic — Why They Don't Buy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -23,6 +23,9 @@
         .nav-links a{color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
         .nav-links a:hover{color:var(--text)}
         .nav-cta{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff!important;padding:10px 20px;border-radius:10px;font-weight:600!important}
+        .lang-switch{display:flex;gap:2px;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:3px;border-radius:8px}
+        .lang-btn{background:none;border:none;color:var(--text3);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+        .lang-btn.active{background:rgba(168,85,247,0.15);color:var(--accent)}
         .hero{padding:100px 0 80px;text-align:center}
         .hero-badge{display:inline-block;padding:8px 16px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);border-radius:20px;font-size:13px;font-weight:600;color:var(--accent);margin-bottom:24px}
         .hero h1{font-size:clamp(40px,6vw,64px);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:20px}
@@ -81,6 +84,9 @@
         .price-btn-free{background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
         .price-btn-pro{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
         .price-btn:hover{transform:translateY(-2px)}
+        .price-note{text-align:center;font-size:13px;color:var(--text3);margin-top:20px}
+        .price-note a{color:var(--accent);text-decoration:none}
+        .price-note a:hover{text-decoration:underline}
         .cta{padding:100px 0;text-align:center}
         .cta-box{background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(99,102,241,0.1));border:1px solid rgba(168,85,247,0.2);border-radius:24px;padding:60px 40px}
         .cta-box h2{font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-1px;margin-bottom:16px}
@@ -106,20 +112,24 @@
                 <div class="logo-text">Critic</div>
             </div>
             <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#how">How it works</a>
-                <a href="#pricing">Pricing</a>
-                <a href="https://landing-page-critic.onrender.com" class="nav-cta">Open App</a>
+                <a href="#features" data-en="Features" data-ru="Возможности">Features</a>
+                <a href="#how" data-en="How it works" data-ru="Как работает">How it works</a>
+                <a href="#pricing" data-en="Pricing" data-ru="Цены">Pricing</a>
+                <a href="https://landing-page-critic.onrender.com" class="nav-cta" data-en="Open App" data-ru="Открыть">Open App</a>
+                <div class="lang-switch">
+                    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+                    <button class="lang-btn" onclick="setLang('ru')">RU</button>
+                </div>
             </div>
         </nav>
 
         <section class="hero">
-            <div class="hero-badge">AI-powered analysis</div>
-            <h1>Why <span>don't they buy?</span></h1>
-            <p>Paste any landing page URL. Get a detailed breakdown of every mistake that's killing your conversions � powered by AI vision.</p>
+            <div class="hero-badge" data-en="AI-powered analysis" data-ru="AI-анализ">AI-powered analysis</div>
+            <h1><span data-en="Why don't they buy?" data-ru="Почему не покупают?">Why don't they buy?</span></h1>
+            <p data-en="Paste any landing page URL. Get a detailed breakdown of every mistake that's killing your conversions — powered by AI vision." data-ru="Вставьте URL лендинга. Получите разбор каждой ошибки, которая убивает конверсию — на основе AI vision.">Paste any landing page URL. Get a detailed breakdown of every mistake that's killing your conversions — powered by AI vision.</p>
             <div class="hero-btns">
-                <a href="https://landing-page-critic.onrender.com" class="btn-primary">Analyze Your Landing Page</a>
-                <a href="#how" class="btn-secondary">See how it works</a>
+                <a href="https://landing-page-critic.onrender.com" class="btn-primary" data-en="Analyze Your Landing Page" data-ru="Проанализировать лендинг">Analyze Your Landing Page</a>
+                <a href="#how" class="btn-secondary" data-en="See how it works" data-ru="Как это работает">See how it works</a>
             </div>
 
             <div class="hero-visual">
@@ -128,31 +138,31 @@
                     <div class="mockup-body">
                         <div class="mock-score">
                             <div class="mock-score-num">72</div>
-                            <div class="mock-score-label">Overall Score</div>
+                            <div class="mock-score-label" data-en="Overall Score" data-ru="Общая оценка">Overall Score</div>
                         </div>
                         <div class="mock-items">
                             <div class="mock-item">
-                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span>Hero Section</div>
+                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span><span data-en="Hero Section" data-ru="Hero секция">Hero Section</span></div>
                                 <div class="mock-bar"><div class="mock-bar-fill" style="width:80%;background:var(--green)"></div></div>
                                 <span style="font-weight:700;font-size:13px">8/10</span>
                             </div>
                             <div class="mock-item">
-                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span>CTA Buttons</div>
+                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span><span data-en="CTA Buttons" data-ru="CTA кнопки">CTA Buttons</span></div>
                                 <div class="mock-bar"><div class="mock-bar-fill" style="width:70%;background:var(--green)"></div></div>
                                 <span style="font-weight:700;font-size:13px">7/10</span>
                             </div>
                             <div class="mock-item">
-                                <div class="mock-item-name"><span class="mock-dot" style="background:#eab308"></span>Trust Signals</div>
+                                <div class="mock-item-name"><span class="mock-dot" style="background:#eab308"></span><span data-en="Trust Signals" data-ru="Доверие">Trust Signals</span></div>
                                 <div class="mock-bar"><div class="mock-bar-fill" style="width:50%;background:#eab308"></div></div>
                                 <span style="font-weight:700;font-size:13px">5/10</span>
                             </div>
                             <div class="mock-item">
-                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span>Color Palette</div>
+                                <div class="mock-item-name"><span class="mock-dot" style="background:var(--green)"></span><span data-en="Color Palette" data-ru="Палитра цветов">Color Palette</span></div>
                                 <div class="mock-bar"><div class="mock-bar-fill" style="width:90%;background:var(--green)"></div></div>
                                 <span style="font-weight:700;font-size:13px">9/10</span>
                             </div>
                             <div class="mock-item">
-                                <div class="mock-item-name"><span class="mock-dot" style="background:#ef4444"></span>Copy Quality</div>
+                                <div class="mock-item-name"><span class="mock-dot" style="background:#ef4444"></span><span data-en="Copy Quality" data-ru="Качество текста">Copy Quality</span></div>
                                 <div class="mock-bar"><div class="mock-bar-fill" style="width:40%;background:#ef4444"></div></div>
                                 <span style="font-weight:700;font-size:13px">4/10</span>
                             </div>
@@ -163,107 +173,119 @@
         </section>
 
         <section class="features" id="features">
-            <div class="section-label">Features</div>
-            <h2 class="section-title">Everything you need to fix your landing page</h2>
+            <div class="section-label" data-en="Features" data-ru="Возможности">Features</div>
+            <h2 class="section-title" data-en="Everything you need to fix your landing page" data-ru="Всё чтобы исправить лендинг">Everything you need to fix your landing page</h2>
             <div class="features-grid">
                 <div class="feat-card">
                     <div class="feat-icon">&#128065;</div>
-                    <h3>AI Vision Analysis</h3>
-                    <p>Llama 4 Scout analyzes your page screenshot like a human conversion expert would.</p>
+                    <h3 data-en="AI Vision Analysis" data-ru="AI Vision анализ">AI Vision Analysis</h3>
+                    <p data-en="Llama 4 Scout analyzes your page screenshot like a human conversion expert would." data-ru="Llama 4 Scout анализирует скриншот как эксперт по конверсии.">Llama 4 Scout analyzes your page screenshot like a human conversion expert would.</p>
                 </div>
                 <div class="feat-card">
                     <div class="feat-icon">&#128200;</div>
-                    <h3>10 Conversion Factors</h3>
-                    <p>Hero, CTA, Trust, Colors, Typography, Copy, Layout, Mobile, Speed, Barriers � scored individually.</p>
+                    <h3 data-en="10 Conversion Factors" data-ru="10 факторов конверсии">10 Conversion Factors</h3>
+                    <p data-en="Hero, CTA, Trust, Colors, Typography, Copy, Layout, Mobile, Speed, Barriers — scored individually." data-ru="Hero, CTA, Доверие, Цвета, Типографика, Текст, Лейаут, Мобилка, Скорость, Барьеры — каждый с оценкой.">Hero, CTA, Trust, Colors, Typography, Copy, Layout, Mobile, Speed, Barriers — scored individually.</p>
                 </div>
                 <div class="feat-card">
                     <div class="feat-icon">&#9889;</div>
-                    <h3>Quick Wins</h3>
-                    <p>Top 3 easiest fixes with the highest impact on your conversion rate.</p>
+                    <h3 data-en="Quick Wins" data-ru="Быстрые победы">Quick Wins</h3>
+                    <p data-en="Top 3 easiest fixes with the highest impact on your conversion rate." data-ru="Топ-3 самых простых исправлений с максимальным эффектом.">Top 3 easiest fixes with the highest impact on your conversion rate.</p>
                 </div>
                 <div class="feat-card">
                     <div class="feat-icon">&#128229;</div>
-                    <h3>Export Reports</h3>
-                    <p>Download beautiful HTML or PDF reports to share with your team or clients.</p>
+                    <h3 data-en="Export Reports" data-ru="Скачивание отчётов">Export Reports</h3>
+                    <p data-en="Download beautiful HTML or PDF reports to share with your team or clients." data-ru="Скачивайте HTML или PDF отчёты для команды или клиентов.">Download beautiful HTML or PDF reports to share with your team or clients.</p>
                 </div>
                 <div class="feat-card">
                     <div class="feat-icon">&#128337;</div>
-                    <h3>Analysis History</h3>
-                    <p>All past analyses saved. Track improvements over time.</p>
+                    <h3 data-en="Analysis History" data-ru="История анализов">Analysis History</h3>
+                    <p data-en="All past analyses saved. Track improvements over time." data-ru="Все прошлые анализы сохраняются. Отслеживайте улучшения.">All past analyses saved. Track improvements over time.</p>
                 </div>
                 <div class="feat-card">
                     <div class="feat-icon">&#127760;</div>
-                    <h3>RU / EN</h3>
-                    <p>Bilingual interface. Analyze any landing page in any language.</p>
+                    <h3 data-en="RU / EN" data-ru="RU / EN">RU / EN</h3>
+                    <p data-en="Bilingual interface. Analyze any landing page in any language." data-ru="Двуязычный интерфейс. Анализируйте любой лендинг на любом языке.">Bilingual interface. Analyze any landing page in any language.</p>
                 </div>
             </div>
         </section>
 
         <section class="how" id="how">
-            <div class="section-label">How it works</div>
-            <h2 class="section-title">Three steps to better conversions</h2>
+            <div class="section-label" data-en="How it works" data-ru="Как работает">How it works</div>
+            <h2 class="section-title" data-en="Three steps to better conversions" data-ru="Три шага к лучшей конверсии">Three steps to better conversions</h2>
             <div class="steps">
                 <div class="step">
                     <div class="step-num">1</div>
-                    <h3>Paste URL</h3>
-                    <p>Enter your landing page URL. Takes 2 seconds.</p>
+                    <h3 data-en="Paste URL" data-ru="Вставьте URL">Paste URL</h3>
+                    <p data-en="Enter your landing page URL. Takes 2 seconds." data-ru="Введите URL лендинга. 2 секунды.">Enter your landing page URL. Takes 2 seconds.</p>
                 </div>
                 <div class="step">
                     <div class="step-num">2</div>
-                    <h3>AI Analyzes</h3>
-                    <p>We take a screenshot and run it through AI vision analysis. Takes 30 seconds.</p>
+                    <h3 data-en="AI Analyzes" data-ru="AI анализирует">AI Analyzes</h3>
+                    <p data-en="We take a screenshot and run it through AI vision analysis. Takes 30 seconds." data-ru="Делаем скриншот и прогоняем через AI vision. 30 секунд.">We take a screenshot and run it through AI vision analysis. Takes 30 seconds.</p>
                 </div>
                 <div class="step">
                     <div class="step-num">3</div>
-                    <h3>Get Report</h3>
-                    <p>Receive a detailed breakdown with scores, issues, and actionable fixes.</p>
+                    <h3 data-en="Get Report" data-ru="Получите отчёт">Get Report</h3>
+                    <p data-en="Receive a detailed breakdown with scores, issues, and actionable fixes." data-ru="Получите детальный разбор с оценками, проблемами и рекомендациями.">Receive a detailed breakdown with scores, issues, and actionable fixes.</p>
                 </div>
             </div>
         </section>
 
         <section class="pricing" id="pricing">
-            <div class="section-label">Pricing</div>
-            <h2 class="section-title">Simple, transparent pricing</h2>
+            <div class="section-label" data-en="Pricing" data-ru="Цены">Pricing</div>
+            <h2 class="section-title" data-en="Simple, transparent pricing" data-ru="Простые, прозрачные цены">Simple, transparent pricing</h2>
             <div class="price-grid">
                 <div class="price-card">
                     <div class="price-name">Free</div>
                     <div class="price-amount">$0</div>
-                    <div class="price-desc">Free forever</div>
+                    <div class="price-desc" data-en="Free forever" data-ru="Бесплатно навсегда">Free forever</div>
                     <ul class="price-list">
-                        <li>3 analyses per hour</li>
-                        <li>Your own Groq API key</li>
-                        <li>HTML report download</li>
-                        <li>Analysis history</li>
+                        <li data-en="3 analyses per hour" data-ru="3 анализа в час">3 analyses per hour</li>
+                        <li data-en="Your own Groq API key" data-ru="Свой Groq API ключ">Your own Groq API key</li>
+                        <li data-en="HTML report download" data-ru="Скачивание HTML отчёта">HTML report download</li>
+                        <li data-en="Analysis history" data-ru="История анализов">Analysis history</li>
                     </ul>
-                    <a href="https://landing-page-critic.onrender.com" class="price-btn price-btn-free">Get Started</a>
+                    <a href="https://landing-page-critic.onrender.com" class="price-btn price-btn-free" data-en="Get Started" data-ru="Начать">Get Started</a>
                 </div>
                 <div class="price-card price-pro">
-                    <div class="price-badge">POPULAR</div>
+                    <div class="price-badge">PRO</div>
                     <div class="price-name">Pro</div>
-                    <div class="price-amount">$5 <span>/ month</span></div>
-                    <div class="price-desc">For professionals</div>
+                    <div class="price-amount">$5 <span data-en="/ month" data-ru="/ месяц">/ month</span></div>
+                    <div class="price-desc" data-en="For professionals" data-ru="Для профессионалов">For professionals</div>
                     <ul class="price-list">
-                        <li>Unlimited analyses</li>
-                        <li>No API key needed</li>
-                        <li>HTML + PDF reports</li>
-                        <li>Priority support</li>
+                        <li data-en="Unlimited analyses" data-ru="Безлимитные анализы">Unlimited analyses</li>
+                        <li data-en="No API key needed" data-ru="Без API ключа">No API key needed</li>
+                        <li data-en="HTML + PDF reports" data-ru="HTML + PDF отчёты">HTML + PDF reports</li>
+                        <li data-en="Priority support" data-ru="Приоритетная поддержка">Priority support</li>
                     </ul>
-                    <button class="price-btn price-btn-pro" onclick="alert('Google Pay integration coming soon!')">Subscribe with Google Pay</button>
+                    <a href="https://t.me/karssvx" target="_blank" class="price-btn price-btn-pro" data-en="Pay via Telegram" data-ru="Оплатить через Telegram">Pay via Telegram</a>
                 </div>
             </div>
+            <p class="price-note" data-en="Payment via Telegram bot (@karssvx). USDT/TRC-20, BTC, ETH." data-ru="Оплата через Telegram бот (@karssvx). USDT/TRC-20, BTC, ETH.">Payment via Telegram bot (@karssvx). USDT/TRC-20, BTC, ETH.</p>
         </section>
 
         <section class="cta">
             <div class="cta-box">
-                <h2>Find out why they don't buy</h2>
-                <p>Get a free AI analysis of your landing page in 30 seconds.</p>
-                <a href="https://landing-page-critic.onrender.com" class="btn-primary">Analyze Now � It's Free</a>
+                <h2 data-en="Find out why they don't buy" data-ru="Узнайте почему не покупают">Find out why they don't buy</h2>
+                <p data-en="Get a free AI analysis of your landing page in 30 seconds." data-ru="Получите бесплатный AI-анализ лендинга за 30 секунд.">Get a free AI analysis of your landing page in 30 seconds.</p>
+                <a href="https://landing-page-critic.onrender.com" class="btn-primary" data-en="Analyze Now — It's Free" data-ru="Анализировать — бесплатно">Analyze Now — It's Free</a>
             </div>
         </section>
 
-        <footer>
-            <p>Landing Page Critic &mdash; AI-powered conversion analysis. Built with Groq, Playwright, and FastAPI.</p>
-        </footer>
+        <footer><p>Landing Page Critic &mdash; AI-powered conversion analysis</p></footer>
     </div>
+
+    <script>
+        let currentLang='en';
+        function setLang(lang){
+            currentLang=lang;
+            document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelector('.lang-btn[onclick="setLang(\''+lang+'\')"]').classList.add('active');
+            document.querySelectorAll('[data-en][data-ru]').forEach(el=>{
+                el.textContent=el.getAttribute('data-'+lang);
+            });
+            document.documentElement.lang=lang;
+        }
+    </script>
 </body>
 </html>
