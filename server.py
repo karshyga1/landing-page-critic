@@ -20,15 +20,32 @@ PRO_KEYS_FILE = "pro_keys.json"
 os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(CACHE_DIR, exist_ok=True)
 
+DEFAULT_PRO_KEYS = {
+    "PRO-ISNODRZLUSWB": {"created": "2026-07-17", "used": False},
+    "PRO-R0N3YO2UV5UW": {"created": "2026-07-17", "used": False},
+    "PRO-05YI1ODSVNCP": {"created": "2026-07-17", "used": False},
+    "PRO-AC1SZEI06A7P": {"created": "2026-07-17", "used": False},
+    "PRO-VDIS6WDAK6D8": {"created": "2026-07-17", "used": False},
+    "PRO-XXE3MMT8TL9D": {"created": "2026-07-17", "used": False},
+    "PRO-EDMA26QOT2LG": {"created": "2026-07-17", "used": False},
+    "PRO-YOSHG2DFZ8SB": {"created": "2026-07-17", "used": False},
+    "PRO-J3XWHBJCQQDL": {"created": "2026-07-17", "used": False},
+    "PRO-JYO1VVUTU11V": {"created": "2026-07-17", "used": False}
+}
+
 rate_limits = {}
 FREE_LIMIT = 3
 RATE_WINDOW = 3600
 
 def load_pro_keys():
     if os.path.exists(PRO_KEYS_FILE):
-        with open(PRO_KEYS_FILE, "r") as f:
-            return json.load(f)
-    return {}
+        try:
+            with open(PRO_KEYS_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return DEFAULT_PRO_KEYS.copy()
+    save_pro_keys(DEFAULT_PRO_KEYS)
+    return DEFAULT_PRO_KEYS.copy()
 
 def save_pro_keys(keys):
     with open(PRO_KEYS_FILE, "w") as f:
@@ -135,7 +152,7 @@ async def verify_pro(request: dict):
 
 @app.post("/api/create-pro-key")
 async def create_pro_key():
-    new_key = f"PRO-{uuid.uuid4().hex[:8].upper()}"
+    new_key = f"PRO-{uuid.uuid4().hex[:12].upper()}"
     keys = load_pro_keys()
     keys[new_key] = {"created": datetime.now().isoformat(), "used": False}
     save_pro_keys(keys)
@@ -164,6 +181,14 @@ async def get_screenshot(filename: str):
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(filepath, media_type="image/png")
+
+@app.get("/api/keys")
+async def get_keys():
+    keys = load_pro_keys()
+    result = []
+    for k, v in keys.items():
+        result.append({"key": k, "used": v.get("used", False)})
+    return result
 
 if __name__ == "__main__":
     import uvicorn
