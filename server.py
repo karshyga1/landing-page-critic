@@ -3,6 +3,7 @@ import json
 import time
 import hashlib
 import uuid
+import sqlite3
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
@@ -14,46 +15,65 @@ from analyzer import analyze_landing_page
 app = FastAPI(title="Landing Page Critic")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+DB_FILE = "data.db"
 HISTORY_DIR = "history"
 CACHE_DIR = "cache"
-PRO_KEYS_FILE = "pro_keys.json"
 os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-DEFAULT_PRO_KEYS = {
-    "PRO-ISNODRZLUSWB": {"created": "2026-07-17"},
-    "PRO-R0N3YO2UV5UW": {"created": "2026-07-17"},
-    "PRO-05YI1ODSVNCP": {"created": "2026-07-17"},
-    "PRO-AC1SZEI06A7P": {"created": "2026-07-17"},
-    "PRO-VDIS6WDAK6D8": {"created": "2026-07-17"},
-    "PRO-XXE3MMT8TL9D": {"created": "2026-07-17"},
-    "PRO-EDMA26QOT2LG": {"created": "2026-07-17"},
-    "PRO-YOSHG2DFZ8SB": {"created": "2026-07-17"},
-    "PRO-J3XWHBJCQQDL": {"created": "2026-07-17"},
-    "PRO-JYO1VVUTU11V": {"created": "2026-07-17"}
-}
+def get_db():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    conn.execute("""CREATE TABLE IF NOT EXISTS pro_keys (
+        key TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL,
+        activated_at TEXT,
+        is_active INTEGER DEFAULT 1
+    )""")
+    conn.commit()
+    conn.close()
+
+def seed_pro_keys():
+    conn = get_db()
+    keys = [
+        "PRO-ISNODRZLUSWB", "PRO-R0N3YO2UV5UW", "PRO-05YI1ODSVNCP",
+        "PRO-AC1SZEI06A7P", "PRO-VDIS6WDAK6D8", "PRO-XXE3MMT8TL9D",
+        "PRO-EDMA26QOT2LG", "PRO-YOSHG2DFZ8SB", "PRO-J3XWHBJCQQDL",
+        "PRO-JYO1VVUTU11V"
+    ]
+    now = datetime.now().isoformat()
+    for key in keys:
+        try:
+            conn.execute("INSERT OR IGNORE INTO pro_keys (key, created_at, is_active) VALUES (?, ?, 1)", (key, now))
+        except:
+            pass
+    conn.commit()
+    conn.close()
+
+init_db()
+seed_pro_keys()
 
 rate_limits = {}
 FREE_LIMIT = 3
 RATE_WINDOW = 3600
 
-def load_pro_keys():
-    if os.path.exists(PRO_KEYS_FILE):
-        try:
-            with open(PRO_KEYS_FILE, "r") as f:
-                return json.load(f)
-        except:
-            return DEFAULT_PRO_KEYS.copy()
-    save_pro_keys(DEFAULT_PRO_KEYS)
-    return DEFAULT_PRO_KEYS.copy()
+def is_valid_pro(key):
+    if not key:
+        return False
+    conn = get_db()
+    row = conn.execute("SELECT is_active FROM pro_keys WHERE key = ?", (key,)).fetchone()
+    conn.close()
+    return row is not None and row["is_active"] == 1
 
-def save_pro_keys(keys):
-    with open(PRO_KEYS_FILE, "w") as f:
-        json.dump(keys, f, indent=2)
-
-def is_pro_key(key):
-    keys = load_pro_keys()
-    return key in keys
+def activate_pro(key):
+    conn = get_db()
+    conn.execute("UPDATE pro_keys SET activated_at = ? WHERE key = ?", (datetime.now().isoformat(), key))
+    conn.commit()
+    conn.close()
 
 class AnalyzeRequest(BaseModel):
     url: str
@@ -71,9 +91,10 @@ async def analyze(request: AnalyzeRequest, req: Request):
     is_pro = False
 
     if request.pro_key:
-        if is_pro_key(request.pro_key):
+        if is_valid_pro(request.pro_key):
             api_key = os.environ.get("GROQ_API_KEY", "")
             is_pro = True
+            activate_pro(request.pro_key)
         else:
             raise HTTPException(status_code=400, detail="Invalid Pro key")
 
@@ -138,21 +159,27 @@ async def analyze(request: AnalyzeRequest, req: Request):
     return record
 
 @app.post("/api/verify-pro")
-async def verify_pro(request: dict):
-    key = request.get("key", "")
-    if not key:
-        raise HTTPException(status_code=400, detail="Key required")
-    if is_pro_key(key):
+async def verify_pro(data: dict):
+    key = data.get("key", "").strip()
+    if is_valid_pro(key):
         return {"valid": True, "message": "Pro activated"}
     return {"valid": False, "message": "Invalid key"}
 
 @app.post("/api/create-pro-key")
 async def create_pro_key():
     new_key = f"PRO-{uuid.uuid4().hex[:12].upper()}"
-    keys = load_pro_keys()
-    keys[new_key] = {"created": datetime.now().isoformat()}
-    save_pro_keys(keys)
+    conn = get_db()
+    conn.execute("INSERT INTO pro_keys (key, created_at, is_active) VALUES (?, ?, 1)", (new_key, datetime.now().isoformat()))
+    conn.commit()
+    conn.close()
     return {"key": new_key}
+
+@app.get("/api/keys")
+async def get_keys():
+    conn = get_db()
+    rows = conn.execute("SELECT key, created_at, activated_at, is_active FROM pro_keys ORDER BY created_at DESC").fetchall()
+    conn.close()
+    return [{"key": r["key"], "created": r["created_at"], "activated": r["activated_at"], "active": bool(r["is_active"])} for r in rows]
 
 @app.get("/api/history")
 async def get_history():
@@ -177,14 +204,6 @@ async def get_screenshot(filename: str):
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(filepath, media_type="image/png")
-
-@app.get("/api/keys")
-async def get_keys():
-    keys = load_pro_keys()
-    result = []
-    for k, v in keys.items():
-        result.append({"key": k})
-    return result
 
 if __name__ == "__main__":
     import uvicorn
