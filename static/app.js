@@ -3,6 +3,7 @@
 document.addEventListener("DOMContentLoaded",()=>{
     setupLang();
     checkApiKey();
+    checkPro();
     loadHistory();
 });
 
@@ -20,7 +21,7 @@ function saveApiKey(){
 }
 function checkApiKey(){
     const key=getApiKey();
-    if(key){
+    if(key||isPro()){
         document.getElementById("api-section").hidden=true;
         document.getElementById("main-input").hidden=false;
         updateUsageDisplay();
@@ -37,6 +38,24 @@ function showApiStatus(msg,type){
     const s=document.getElementById("api-status");
     s.textContent=msg;
     s.className="api-status "+type;
+}
+
+// Pro Management
+function isPro(){return localStorage.getItem("lpcritic_pro")==="true"}
+function checkPro(){
+    if(isPro()){
+        document.getElementById("api-section").hidden=true;
+        document.getElementById("main-input").hidden=false;
+        updateUsageDisplay();
+        setupForm();
+        updateProUI();
+    }
+}
+function updateProUI(){
+    const badge=document.getElementById("pro-badge");
+    if(badge)badge.hidden=!isPro();
+    const usage=document.getElementById("usage-bar");
+    if(usage)usage.hidden=isPro();
 }
 
 // Usage Tracking
@@ -64,19 +83,21 @@ function setupForm(){
         e.preventDefault();
         const url=document.getElementById("url-input").value.trim();
         if(!url)return;
-        const usage=getUsage();
-        if(usage.count>=3){showError(currentLang==="ru"?"Лимит: 3 в час. Купите Pro для безлимита.":"Free limit: 3 per hour. Get Pro for unlimited.",true);return}
+        if(!isPro()){
+            const usage=getUsage();
+            if(usage.count>=3){showError(currentLang==="ru"?"Лимит: 3 в час. Купите Pro для безлимита.":"Free limit: 3 per hour. Get Pro for unlimited.",true);return}
+        }
         setLoading(true);hide("error-section");hide("results");
         try{
-            const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,api_key:getApiKey()})});
+            const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,api_key:getApiKey(),is_pro:isPro()})});
             if(!r.ok){const err=await r.json();throw new Error(err.detail||"Failed")}
             const d=await r.json();
-            trackUsage();
+            if(!isPro())trackUsage();
             updateUsageDisplay();
             renderResults(d);loadHistory();
         }catch(e){
             const isApiKeyError=e.message.includes("API key")||e.message.includes("401")||e.message.includes("Invalid")||e.message.includes("auth");
-            showError(e.message,isApiKeyError);
+            showError(e.message,isApiKeyError&&!isPro());
         }finally{setLoading(false)}
     });
 }
@@ -120,3 +141,17 @@ const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob)
 }else if(type==="pdf"){
 html2pdf().set({margin:10,filename:"report-"+d.id+".pdf",html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(document.getElementById("report-content")).save();
 }}
+
+// Pro Activation
+function activatePro(){
+    const key=prompt(currentLang==="ru"?"Введите Pro-ключ от @karssvx:":"Enter Pro key from @karssvx:");
+    if(!key)return;
+    if(key.startsWith("PRO-")){
+        localStorage.setItem("lpcritic_pro","true");
+        localStorage.setItem("lpcritic_pro_key",key);
+        alert(currentLang==="ru"?"Pro активирован!":"Pro activated!");
+        checkPro();
+    }else{
+        alert(currentLang==="ru"?"Неверный ключ":"Invalid key");
+    }
+}

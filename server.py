@@ -16,6 +16,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 HISTORY_DIR = "history"
 CACHE_DIR = "cache"
+PRO_API_KEY = os.environ.get("GROQ_API_KEY", "")
 os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -25,7 +26,8 @@ RATE_WINDOW = 3600
 
 class AnalyzeRequest(BaseModel):
     url: str
-    api_key: str
+    api_key: str = ""
+    is_pro: bool = False
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -34,20 +36,22 @@ async def root():
 
 @app.post("/api/analyze")
 async def analyze(request: AnalyzeRequest, req: Request):
-    api_key = request.api_key
+    api_key = PRO_API_KEY if request.is_pro else request.api_key
     if not api_key:
         raise HTTPException(status_code=400, detail="API key required")
 
     client_ip = req.client.host
     now = time.time()
-    if client_ip in rate_limits:
-        timestamps = [t for t in rate_limits[client_ip] if now - t < RATE_WINDOW]
-        if len(timestamps) >= FREE_LIMIT:
-            raise HTTPException(status_code=429, detail=f"Free limit: {FREE_LIMIT} analyses per hour. Get Pro for unlimited.")
-        rate_limits[client_ip] = timestamps
-    else:
-        rate_limits[client_ip] = []
-    rate_limits[client_ip].append(now)
+
+    if not request.is_pro:
+        if client_ip in rate_limits:
+            timestamps = [t for t in rate_limits[client_ip] if now - t < RATE_WINDOW]
+            if len(timestamps) >= FREE_LIMIT:
+                raise HTTPException(status_code=429, detail="Free limit: 3 per hour. Get Pro for unlimited.")
+            rate_limits[client_ip] = timestamps
+        else:
+            rate_limits[client_ip] = []
+        rate_limits[client_ip].append(now)
 
     url = request.url
     if not url.startswith(("http://", "https://")):
@@ -119,5 +123,4 @@ async def get_screenshot(filename: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-
     uvicorn.run(app, host="0.0.0.0", port=port)
