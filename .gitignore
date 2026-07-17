@@ -5,3 +5,5 @@ cache/
 .env
 *.png
 .DS_Store
+pro_keys.json
+

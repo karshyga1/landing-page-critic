@@ -16,7 +16,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 HISTORY_DIR = "history"
 CACHE_DIR = "cache"
-PRO_API_KEY = os.environ.get("GROQ_API_KEY", "")
+PRO_KEYS_FILE = "pro_keys.json"
 os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -24,10 +24,29 @@ rate_limits = {}
 FREE_LIMIT = 3
 RATE_WINDOW = 3600
 
+def load_pro_keys():
+    if os.path.exists(PRO_KEYS_FILE):
+        with open(PRO_KEYS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_pro_keys(keys):
+    with open(PRO_KEYS_FILE, "w") as f:
+        json.dump(keys, f, indent=2)
+
+def is_valid_pro_key(key):
+    keys = load_pro_keys()
+    if key in keys and not keys[key].get("used"):
+        keys[key]["used"] = True
+        keys[key]["used_at"] = datetime.now().isoformat()
+        save_pro_keys(keys)
+        return True
+    return False
+
 class AnalyzeRequest(BaseModel):
     url: str
     api_key: str = ""
-    is_pro: bool = False
+    pro_key: str = ""
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -36,14 +55,21 @@ async def root():
 
 @app.post("/api/analyze")
 async def analyze(request: AnalyzeRequest, req: Request):
-    api_key = PRO_API_KEY if request.is_pro else request.api_key
+    api_key = request.api_key
+
+    if request.pro_key:
+        if is_valid_pro_key(request.pro_key):
+            api_key = os.environ.get("GROQ_API_KEY", "")
+        else:
+            raise HTTPException(status_code=400, detail="Invalid or already used Pro key")
+
     if not api_key:
         raise HTTPException(status_code=400, detail="API key required")
 
     client_ip = req.client.host
     now = time.time()
 
-    if not request.is_pro:
+    if not request.pro_key:
         if client_ip in rate_limits:
             timestamps = [t for t in rate_limits[client_ip] if now - t < RATE_WINDOW]
             if len(timestamps) >= FREE_LIMIT:
@@ -85,7 +111,8 @@ async def analyze(request: AnalyzeRequest, req: Request):
         "timestamp": datetime.now().isoformat(),
         "timestamp_unix": now,
         "result": result,
-        "screenshot": screenshot_path
+        "screenshot": screenshot_path,
+        "is_pro": bool(request.pro_key)
     }
 
     with open(f"{HISTORY_DIR}/{analysis_id}.json", "w", encoding="utf-8") as f:
@@ -95,6 +122,24 @@ async def analyze(request: AnalyzeRequest, req: Request):
         json.dump(record, f, ensure_ascii=False, indent=2)
 
     return record
+
+@app.post("/api/verify-pro")
+async def verify_pro(request: dict):
+    key = request.get("key", "")
+    if not key:
+        raise HTTPException(status_code=400, detail="Key required")
+    keys = load_pro_keys()
+    if key in keys and not keys[key].get("used"):
+        return {"valid": True, "message": "Pro key activated"}
+    return {"valid": False, "message": "Invalid or already used key"}
+
+@app.post("/api/create-pro-key")
+async def create_pro_key():
+    new_key = f"PRO-{uuid.uuid4().hex[:8].upper()}"
+    keys = load_pro_keys()
+    keys[new_key] = {"created": datetime.now().isoformat(), "used": False}
+    save_pro_keys(keys)
+    return {"key": new_key}
 
 @app.get("/api/history")
 async def get_history():

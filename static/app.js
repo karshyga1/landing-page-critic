@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 function setupLang(){document.querySelectorAll(".lang-btn").forEach(b=>{b.addEventListener("click",()=>{document.querySelectorAll(".lang-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentLang=b.dataset.lang;applyLang()})})}
 function applyLang(){document.querySelectorAll("[data-ru][data-en]").forEach(el=>{el.textContent=el.getAttribute("data-"+currentLang)})}
 
-// API Key Management
 function getApiKey(){return localStorage.getItem("lpcritic_api_key")||""}
 function saveApiKey(){
     const key=document.getElementById("api-key-input").value.trim();
@@ -21,7 +20,7 @@ function saveApiKey(){
 }
 function checkApiKey(){
     const key=getApiKey();
-    if(key||isPro()){
+    if(key||getProKey()){
         document.getElementById("api-section").hidden=true;
         document.getElementById("main-input").hidden=false;
         updateUsageDisplay();
@@ -40,8 +39,8 @@ function showApiStatus(msg,type){
     s.className="api-status "+type;
 }
 
-// Pro Management
-function isPro(){return localStorage.getItem("lpcritic_pro")==="true"}
+function getProKey(){return localStorage.getItem("lpcritic_pro_key")||""}
+function isPro(){return!!getProKey()}
 function checkPro(){
     if(isPro()){
         document.getElementById("api-section").hidden=true;
@@ -57,8 +56,23 @@ function updateProUI(){
     const usage=document.getElementById("usage-bar");
     if(usage)usage.hidden=isPro();
 }
+function activatePro(){
+    const key=prompt(currentLang==="ru"?"Введите Pro-ключ от @karssvx:":"Enter Pro key from @karssvx:");
+    if(!key)return;
+    fetch("/api/verify-pro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key})})
+    .then(r=>r.json())
+    .then(data=>{
+        if(data.valid){
+            localStorage.setItem("lpcritic_pro_key",key);
+            alert(currentLang==="ru"?"Pro активирован! Безлимитные анализы!":"Pro activated! Unlimited analyses!");
+            checkPro();
+        }else{
+            alert(currentLang==="ru"?"Неверный или использованный ключ":data.message);
+        }
+    })
+    .catch(()=>alert(currentLang==="ru"?"Ошибка сервера":"Server error"));
+}
 
-// Usage Tracking
 function getUsage(){
     const data=JSON.parse(localStorage.getItem("lpcritic_usage")||"{}");
     const now=Date.now();
@@ -77,7 +91,6 @@ function updateUsageDisplay(){
     document.getElementById("usage-count").textContent=remaining+" / 3";
 }
 
-// Form
 function setupForm(){
     document.getElementById("analyze-form").addEventListener("submit",async e=>{
         e.preventDefault();
@@ -89,7 +102,9 @@ function setupForm(){
         }
         setLoading(true);hide("error-section");hide("results");
         try{
-            const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,api_key:getApiKey(),is_pro:isPro()})});
+            const body={url,api_key:getApiKey()};
+            if(isPro())body.pro_key=getProKey();
+            const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
             if(!r.ok){const err=await r.json();throw new Error(err.detail||"Failed")}
             const d=await r.json();
             if(!isPro())trackUsage();
@@ -141,17 +156,3 @@ const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob)
 }else if(type==="pdf"){
 html2pdf().set({margin:10,filename:"report-"+d.id+".pdf",html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(document.getElementById("report-content")).save();
 }}
-
-// Pro Activation
-function activatePro(){
-    const key=prompt(currentLang==="ru"?"Введите Pro-ключ от @karssvx:":"Enter Pro key from @karssvx:");
-    if(!key)return;
-    if(key.startsWith("PRO-")){
-        localStorage.setItem("lpcritic_pro","true");
-        localStorage.setItem("lpcritic_pro_key",key);
-        alert(currentLang==="ru"?"Pro активирован!":"Pro activated!");
-        checkPro();
-    }else{
-        alert(currentLang==="ru"?"Неверный ключ":"Invalid key");
-    }
-}
