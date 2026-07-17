@@ -13,9 +13,9 @@ function applyLang(){document.querySelectorAll("[data-ru][data-en]").forEach(el=
 function getApiKey(){return localStorage.getItem("lpcritic_api_key")||""}
 function saveApiKey(){
     const key=document.getElementById("api-key-input").value.trim();
-    if(!key){showApiStatus("Enter a valid key","err");return}
+    if(!key){showApiStatus(currentLang==="ru"?"Введите ключ":"Enter a key","err");return}
     localStorage.setItem("lpcritic_api_key",key);
-    showApiStatus("Key saved!","ok");
+    showApiStatus(currentLang==="ru"?"Ключ сохранён!":"Key saved!","ok");
     setTimeout(()=>checkApiKey(),500);
 }
 function checkApiKey(){
@@ -27,13 +27,19 @@ function checkApiKey(){
         setupForm();
     }
 }
+function showApiSection(){
+    document.getElementById("api-section").hidden=false;
+    document.getElementById("main-input").hidden=true;
+    document.getElementById("api-key-input").value=getApiKey();
+    showApiStatus(currentLang==="ru"?"Введите новый ключ":"Enter new key","");
+}
 function showApiStatus(msg,type){
     const s=document.getElementById("api-status");
     s.textContent=msg;
     s.className="api-status "+type;
 }
 
-// Usage Tracking (client-side for free tier)
+// Usage Tracking
 function getUsage(){
     const data=JSON.parse(localStorage.getItem("lpcritic_usage")||"{}");
     const now=Date.now();
@@ -59,7 +65,7 @@ function setupForm(){
         const url=document.getElementById("url-input").value.trim();
         if(!url)return;
         const usage=getUsage();
-        if(usage.count>=3){showError("Free limit: 3 per hour. Upgrade to Pro for unlimited.");return}
+        if(usage.count>=3){showError(currentLang==="ru"?"Лимит: 3 в час. Купите Pro для безлимита.":"Free limit: 3 per hour. Get Pro for unlimited.",true);return}
         setLoading(true);hide("error-section");hide("results");
         try{
             const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,api_key:getApiKey()})});
@@ -68,13 +74,23 @@ function setupForm(){
             trackUsage();
             updateUsageDisplay();
             renderResults(d);loadHistory();
-        }catch(e){showError(e.message)}finally{setLoading(false)}
+        }catch(e){
+            const isApiKeyError=e.message.includes("API key")||e.message.includes("401")||e.message.includes("Invalid")||e.message.includes("auth");
+            showError(e.message,isApiKeyError);
+        }finally{setLoading(false)}
     });
 }
 
 function setLoading(v){const b=document.getElementById("analyze-btn"),sp=b.querySelector(".btn-spinner"),tx=b.querySelector(".btn-text"),ld=document.getElementById("loading");b.disabled=v;sp.hidden=!v;tx.hidden=v;ld.hidden=!v}
 function hide(id){document.getElementById(id).hidden=true}
-function showError(msg){const s=document.getElementById("error-section");document.getElementById("error-message").textContent=msg;s.hidden=false}
+function showError(msg,showChangeBtn){
+    const s=document.getElementById("error-section");
+    const m=document.getElementById("error-message");
+    m.textContent=msg;
+    const btn=document.getElementById("change-key-btn");
+    btn.hidden=!showChangeBtn;
+    s.hidden=false;
+}
 
 function renderResults(data){
 currentAnalysis=data;
@@ -104,20 +120,3 @@ const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob)
 }else if(type==="pdf"){
 html2pdf().set({margin:10,filename:"report-"+d.id+".pdf",html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(document.getElementById("report-content")).save();
 }}
-
-
-function onGooglePayLoaded(){
-    googlePayClient=new google.payments.api.PaymentsClient({environment:"TEST"});
-    const button=googlePayClient.createButton({onClick:onGooglePayClick,buttonColor:"black",buttonType:"subscribe"});
-    document.getElementById("google-pay-button-container").appendChild(button);
-}
-function onGooglePayClick(){
-    const paymentDataRequest={apiVersion:2,apiVersionMinor:0,allowedPaymentMethods:[{type:"CARD",parameters:{allowedAuthMethods:["PAN_ONLY","CRYPTOGRAM_3DS"],allowedCardNetworks:["MASTERCARD","VISA","AMEX"]},tokenizationSpecification:{type:"PAYMENT_GATEWAY",parameters:{gateway:"example",gatewayMerchantId:"example"}}}],transactionInfo:{totalPriceStatus:"FINAL",totalPrice:"5.00",currencyCode:"USD",countryCode:"US"},merchantInfo:{merchantName:"Landing Page Critic"}};
-    googlePayClient.loadPaymentData(paymentDataRequest).then(paymentData=>{
-        alert("Payment successful! Pro activated.");
-        localStorage.setItem("lpcritic_pro","true");
-    }).catch(err=>{
-        if(err.statusCode!=="CANCELED")console.error(err);
-    });
-}
-

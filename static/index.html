@@ -116,7 +116,12 @@
             <section id="error-section" class="error-section" hidden>
                 <div class="error-card">
                     <div class="error-icon">!</div>
-                    <p id="error-message"></p>
+                    <div class="error-body">
+                        <p id="error-message"></p>
+                        <button id="change-key-btn" class="change-key-btn" onclick="showApiSection()" hidden>
+                            <span data-ru="Сменить API ключ" data-en="Change API Key">Сменить API ключ</span>
+                        </button>
+                    </div>
                 </div>
             </section>
 
@@ -175,4 +180,5 @@
     <script src="/static/app.js"></script>
 </body>
 </html>
+
 

@@ -159,3 +159,7 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:900;letter-spacing:-1.5px;line-hei
 .hist-empty{color:var(--text3);padding:24px 0;font-size:14px;text-align:center}
 footer{text-align:center;padding:48px 0 24px;color:var(--text3);font-size:12px}
 @media(max-width:640px){.score-hero{flex-direction:column;text-align:center}.cat-cols{grid-template-columns:1fr}.results-toolbar{flex-direction:column}.pricing-grid{grid-template-columns:1fr}.hist-url{max-width:180px}}
+
+.error-body{display:flex;flex-direction:column;gap:12px;flex:1}
+.change-key-btn{background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3);color:var(--accent);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;width:fit-content}
+.change-key-btn:hover{background:rgba(168,85,247,0.25);border-color:var(--accent)}
