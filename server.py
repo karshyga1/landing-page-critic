@@ -51,14 +51,16 @@ def save_pro_keys(keys):
     with open(PRO_KEYS_FILE, "w") as f:
         json.dump(keys, f, indent=2)
 
-def is_valid_pro_key(key):
+def check_pro_key(key):
     keys = load_pro_keys()
-    if key in keys and not keys[key].get("used"):
+    return key in keys and not keys[key].get("used")
+
+def use_pro_key(key):
+    keys = load_pro_keys()
+    if key in keys:
         keys[key]["used"] = True
         keys[key]["used_at"] = datetime.now().isoformat()
         save_pro_keys(keys)
-        return True
-    return False
 
 class AnalyzeRequest(BaseModel):
     url: str
@@ -73,10 +75,12 @@ async def root():
 @app.post("/api/analyze")
 async def analyze(request: AnalyzeRequest, req: Request):
     api_key = request.api_key
+    is_pro = False
 
     if request.pro_key:
-        if is_valid_pro_key(request.pro_key):
+        if check_pro_key(request.pro_key):
             api_key = os.environ.get("GROQ_API_KEY", "")
+            is_pro = True
         else:
             raise HTTPException(status_code=400, detail="Invalid or already used Pro key")
 
@@ -86,7 +90,7 @@ async def analyze(request: AnalyzeRequest, req: Request):
     client_ip = req.client.host
     now = time.time()
 
-    if not request.pro_key:
+    if not is_pro:
         if client_ip in rate_limits:
             timestamps = [t for t in rate_limits[client_ip] if now - t < RATE_WINDOW]
             if len(timestamps) >= FREE_LIMIT:
@@ -108,6 +112,8 @@ async def analyze(request: AnalyzeRequest, req: Request):
             cached = json.load(f)
         age_minutes = (now - cached.get("timestamp_unix", 0)) / 60
         if age_minutes < 1440:
+            if is_pro:
+                use_pro_key(request.pro_key)
             return cached
 
     screenshot_path = f"history/screenshot_{uuid.uuid4().hex[:8]}.png"
@@ -121,6 +127,9 @@ async def analyze(request: AnalyzeRequest, req: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
+    if is_pro:
+        use_pro_key(request.pro_key)
+
     analysis_id = uuid.uuid4().hex[:8]
     record = {
         "id": analysis_id,
@@ -129,7 +138,7 @@ async def analyze(request: AnalyzeRequest, req: Request):
         "timestamp_unix": now,
         "result": result,
         "screenshot": screenshot_path,
-        "is_pro": bool(request.pro_key)
+        "is_pro": is_pro
     }
 
     with open(f"{HISTORY_DIR}/{analysis_id}.json", "w", encoding="utf-8") as f:
@@ -145,9 +154,8 @@ async def verify_pro(request: dict):
     key = request.get("key", "")
     if not key:
         raise HTTPException(status_code=400, detail="Key required")
-    keys = load_pro_keys()
-    if key in keys and not keys[key].get("used"):
-        return {"valid": True, "message": "Pro key activated"}
+    if check_pro_key(key):
+        return {"valid": True, "message": "Pro key is valid"}
     return {"valid": False, "message": "Invalid or already used key"}
 
 @app.post("/api/create-pro-key")
