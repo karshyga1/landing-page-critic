@@ -21,16 +21,16 @@ os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 DEFAULT_PRO_KEYS = {
-    "PRO-ISNODRZLUSWB": {"created": "2026-07-17", "used": False},
-    "PRO-R0N3YO2UV5UW": {"created": "2026-07-17", "used": False},
-    "PRO-05YI1ODSVNCP": {"created": "2026-07-17", "used": False},
-    "PRO-AC1SZEI06A7P": {"created": "2026-07-17", "used": False},
-    "PRO-VDIS6WDAK6D8": {"created": "2026-07-17", "used": False},
-    "PRO-XXE3MMT8TL9D": {"created": "2026-07-17", "used": False},
-    "PRO-EDMA26QOT2LG": {"created": "2026-07-17", "used": False},
-    "PRO-YOSHG2DFZ8SB": {"created": "2026-07-17", "used": False},
-    "PRO-J3XWHBJCQQDL": {"created": "2026-07-17", "used": False},
-    "PRO-JYO1VVUTU11V": {"created": "2026-07-17", "used": False}
+    "PRO-ISNODRZLUSWB": {"created": "2026-07-17"},
+    "PRO-R0N3YO2UV5UW": {"created": "2026-07-17"},
+    "PRO-05YI1ODSVNCP": {"created": "2026-07-17"},
+    "PRO-AC1SZEI06A7P": {"created": "2026-07-17"},
+    "PRO-VDIS6WDAK6D8": {"created": "2026-07-17"},
+    "PRO-XXE3MMT8TL9D": {"created": "2026-07-17"},
+    "PRO-EDMA26QOT2LG": {"created": "2026-07-17"},
+    "PRO-YOSHG2DFZ8SB": {"created": "2026-07-17"},
+    "PRO-J3XWHBJCQQDL": {"created": "2026-07-17"},
+    "PRO-JYO1VVUTU11V": {"created": "2026-07-17"}
 }
 
 rate_limits = {}
@@ -51,16 +51,9 @@ def save_pro_keys(keys):
     with open(PRO_KEYS_FILE, "w") as f:
         json.dump(keys, f, indent=2)
 
-def check_pro_key(key):
+def is_pro_key(key):
     keys = load_pro_keys()
-    return key in keys and not keys[key].get("used")
-
-def use_pro_key(key):
-    keys = load_pro_keys()
-    if key in keys:
-        keys[key]["used"] = True
-        keys[key]["used_at"] = datetime.now().isoformat()
-        save_pro_keys(keys)
+    return key in keys
 
 class AnalyzeRequest(BaseModel):
     url: str
@@ -78,11 +71,11 @@ async def analyze(request: AnalyzeRequest, req: Request):
     is_pro = False
 
     if request.pro_key:
-        if check_pro_key(request.pro_key):
+        if is_pro_key(request.pro_key):
             api_key = os.environ.get("GROQ_API_KEY", "")
             is_pro = True
         else:
-            raise HTTPException(status_code=400, detail="Invalid or already used Pro key")
+            raise HTTPException(status_code=400, detail="Invalid Pro key")
 
     if not api_key:
         raise HTTPException(status_code=400, detail="API key required")
@@ -112,8 +105,6 @@ async def analyze(request: AnalyzeRequest, req: Request):
             cached = json.load(f)
         age_minutes = (now - cached.get("timestamp_unix", 0)) / 60
         if age_minutes < 1440:
-            if is_pro:
-                use_pro_key(request.pro_key)
             return cached
 
     screenshot_path = f"history/screenshot_{uuid.uuid4().hex[:8]}.png"
@@ -126,9 +117,6 @@ async def analyze(request: AnalyzeRequest, req: Request):
         result = analyze_landing_page(screenshot_path, "", url, api_key)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-    if is_pro:
-        use_pro_key(request.pro_key)
 
     analysis_id = uuid.uuid4().hex[:8]
     record = {
@@ -154,15 +142,15 @@ async def verify_pro(request: dict):
     key = request.get("key", "")
     if not key:
         raise HTTPException(status_code=400, detail="Key required")
-    if check_pro_key(key):
-        return {"valid": True, "message": "Pro key is valid"}
-    return {"valid": False, "message": "Invalid or already used key"}
+    if is_pro_key(key):
+        return {"valid": True, "message": "Pro activated"}
+    return {"valid": False, "message": "Invalid key"}
 
 @app.post("/api/create-pro-key")
 async def create_pro_key():
     new_key = f"PRO-{uuid.uuid4().hex[:12].upper()}"
     keys = load_pro_keys()
-    keys[new_key] = {"created": datetime.now().isoformat(), "used": False}
+    keys[new_key] = {"created": datetime.now().isoformat()}
     save_pro_keys(keys)
     return {"key": new_key}
 
@@ -195,7 +183,7 @@ async def get_keys():
     keys = load_pro_keys()
     result = []
     for k, v in keys.items():
-        result.append({"key": k, "used": v.get("used", False)})
+        result.append({"key": k})
     return result
 
 if __name__ == "__main__":
