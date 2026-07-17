@@ -18,6 +18,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 DB_FILE = "data.db"
 HISTORY_DIR = "history"
 CACHE_DIR = "cache"
+PRO_LIMIT = 50
 os.makedirs(HISTORY_DIR, exist_ok=True)
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -32,6 +33,8 @@ def init_db():
         key TEXT PRIMARY KEY,
         created_at TEXT NOT NULL,
         activated_at TEXT,
+        uses_left INTEGER DEFAULT 50,
+        max_uses INTEGER DEFAULT 50,
         is_active INTEGER DEFAULT 1
     )""")
     conn.commit()
@@ -48,7 +51,7 @@ def seed_pro_keys():
     now = datetime.now().isoformat()
     for key in keys:
         try:
-            conn.execute("INSERT OR IGNORE INTO pro_keys (key, created_at, is_active) VALUES (?, ?, 1)", (key, now))
+            conn.execute("INSERT OR IGNORE INTO pro_keys (key, created_at, uses_left, max_uses, is_active) VALUES (?, ?, ?, ?, 1)", (key, now, PRO_LIMIT, PRO_LIMIT))
         except:
             pass
     conn.commit()
@@ -61,17 +64,19 @@ rate_limits = {}
 FREE_LIMIT = 3
 RATE_WINDOW = 3600
 
-def is_valid_pro(key):
+def check_pro_key(key):
     if not key:
-        return False
+        return False, 0
     conn = get_db()
-    row = conn.execute("SELECT is_active FROM pro_keys WHERE key = ?", (key,)).fetchone()
+    row = conn.execute("SELECT uses_left, is_active FROM pro_keys WHERE key = ?", (key,)).fetchone()
     conn.close()
-    return row is not None and row["is_active"] == 1
+    if row and row["is_active"] == 1 and row["uses_left"] > 0:
+        return True, row["uses_left"]
+    return False, 0
 
-def activate_pro(key):
+def use_pro_key(key):
     conn = get_db()
-    conn.execute("UPDATE pro_keys SET activated_at = ? WHERE key = ?", (datetime.now().isoformat(), key))
+    conn.execute("UPDATE pro_keys SET uses_left = uses_left - 1, activated_at = COALESCE(activated_at, ?) WHERE key = ? AND uses_left > 0", (datetime.now().isoformat(), key))
     conn.commit()
     conn.close()
 
@@ -89,14 +94,15 @@ async def root():
 async def analyze(request: AnalyzeRequest, req: Request):
     api_key = request.api_key
     is_pro = False
+    uses_left = 0
 
     if request.pro_key:
-        if is_valid_pro(request.pro_key):
+        valid, uses_left = check_pro_key(request.pro_key)
+        if valid:
             api_key = os.environ.get("GROQ_API_KEY", "")
             is_pro = True
-            activate_pro(request.pro_key)
         else:
-            raise HTTPException(status_code=400, detail="Invalid Pro key")
+            raise HTTPException(status_code=400, detail="Invalid or expired Pro key (0 uses left)")
 
     if not api_key:
         raise HTTPException(status_code=400, detail="API key required")
@@ -126,6 +132,8 @@ async def analyze(request: AnalyzeRequest, req: Request):
             cached = json.load(f)
         age_minutes = (now - cached.get("timestamp_unix", 0)) / 60
         if age_minutes < 1440:
+            if is_pro:
+                use_pro_key(request.pro_key)
             return cached
 
     screenshot_path = f"history/screenshot_{uuid.uuid4().hex[:8]}.png"
@@ -139,6 +147,10 @@ async def analyze(request: AnalyzeRequest, req: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
+    if is_pro:
+        use_pro_key(request.pro_key)
+        uses_left -= 1
+
     analysis_id = uuid.uuid4().hex[:8]
     record = {
         "id": analysis_id,
@@ -147,7 +159,8 @@ async def analyze(request: AnalyzeRequest, req: Request):
         "timestamp_unix": now,
         "result": result,
         "screenshot": screenshot_path,
-        "is_pro": is_pro
+        "is_pro": is_pro,
+        "uses_left": uses_left if is_pro else 0
     }
 
     with open(f"{HISTORY_DIR}/{analysis_id}.json", "w", encoding="utf-8") as f:
@@ -161,25 +174,26 @@ async def analyze(request: AnalyzeRequest, req: Request):
 @app.post("/api/verify-pro")
 async def verify_pro(data: dict):
     key = data.get("key", "").strip()
-    if is_valid_pro(key):
-        return {"valid": True, "message": "Pro activated"}
-    return {"valid": False, "message": "Invalid key"}
+    valid, uses_left = check_pro_key(key)
+    if valid:
+        return {"valid": True, "message": f"Pro activated. {uses_left} uses left"}
+    return {"valid": False, "message": "Invalid or expired key"}
 
 @app.post("/api/create-pro-key")
 async def create_pro_key():
     new_key = f"PRO-{uuid.uuid4().hex[:12].upper()}"
     conn = get_db()
-    conn.execute("INSERT INTO pro_keys (key, created_at, is_active) VALUES (?, ?, 1)", (new_key, datetime.now().isoformat()))
+    conn.execute("INSERT INTO pro_keys (key, created_at, uses_left, max_uses, is_active) VALUES (?, ?, ?, ?, 1)", (new_key, datetime.now().isoformat(), PRO_LIMIT, PRO_LIMIT))
     conn.commit()
     conn.close()
-    return {"key": new_key}
+    return {"key": new_key, "uses": PRO_LIMIT}
 
 @app.get("/api/keys")
 async def get_keys():
     conn = get_db()
-    rows = conn.execute("SELECT key, created_at, activated_at, is_active FROM pro_keys ORDER BY created_at DESC").fetchall()
+    rows = conn.execute("SELECT key, created_at, activated_at, uses_left, max_uses FROM pro_keys ORDER BY created_at DESC").fetchall()
     conn.close()
-    return [{"key": r["key"], "created": r["created_at"], "activated": r["activated_at"], "active": bool(r["is_active"])} for r in rows]
+    return [{"key": r["key"], "created": r["created_at"], "activated": r["activated_at"], "uses_left": r["uses_left"], "max_uses": r["max_uses"]} for r in rows]
 
 @app.get("/api/history")
 async def get_history():

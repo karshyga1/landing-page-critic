@@ -64,7 +64,7 @@ function activatePro(){
     .then(data=>{
         if(data.valid){
             localStorage.setItem("lpcritic_pro_key",key);
-            alert(currentLang==="ru"?"Pro активирован! Безлимитные анализы!":"Pro activated! Unlimited analyses!");
+            alert(currentLang==="ru"?"Pro активирован! "+data.message:"Pro activated! "+data.message);
             checkPro();
         }else{
             alert(currentLang==="ru"?"Неверный или использованный ключ":data.message);
@@ -156,3 +156,4 @@ const blob=new Blob([html],{type:"text/html"});const u=URL.createObjectURL(blob)
 }else if(type==="pdf"){
 html2pdf().set({margin:10,filename:"report-"+d.id+".pdf",html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(document.getElementById("report-content")).save();
 }}
+
